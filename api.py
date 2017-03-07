@@ -47,7 +47,9 @@ def show_exchange_rate(currency):
     rate = mongo.rates.find(query_filter, sort=[('date', -1)], limit=5)
     if rate is None:
         abort(404, 'Rate exchange not found')
-    return jsonify(list(rate))
+    response = jsonify(list(rate))
+    response.headers['Access-Control-Allow-Origin'] = "*"
+    return response
 
 if __name__ == "__main__":
     app.run()
