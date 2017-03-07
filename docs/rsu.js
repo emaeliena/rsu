@@ -1,5 +1,7 @@
 $(document).ready(function() {
 
+    var $searchDateWidget = $('#search_date');
+
     var queryRates = function(date) {
         var url = 'https://rsuapi.herokuapp.com/v1/rates/USD';
         if (date != '') {
@@ -9,7 +11,7 @@ $(document).ready(function() {
             url: url
         }).done(function(data) {
             var lastDate = new Date(data[0].date).toISOString().slice(0, 10);
-            var $searchDateWidget = $('#search_date');
+
             if ($searchDateWidget.val() == '') {
                 $searchDateWidget.val(lastDate);
             }
@@ -24,12 +26,24 @@ $(document).ready(function() {
         });
     };
 
-    $('#search_date').change(function(event) {
+    $searchDateWidget.change(function(event) {
         queryRates(event.target.value);
     });
 
-    $('#search_date').datepicker({
+    $searchDateWidget.datepicker({
         dateFormat: 'yy-mm-dd'
+    });
+
+    $('#nav_buttons button').click(function(event) {
+        var direction = $(event.target).data('direction');
+        var searchDate = new Date($searchDateWidget.val());
+        if (direction == 'right') {
+            searchDate.setDate(searchDate.getDate() + 5);
+        } else {
+            searchDate.setDate(searchDate.getDate() - 5);
+        }
+        $searchDateWidget.datepicker('setDate', searchDate);
+        $searchDateWidget.change();
     });
 
     queryRates('');
