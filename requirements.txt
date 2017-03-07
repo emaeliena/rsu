@@ -1,3 +1,5 @@
+beaker
 Flask==0.12
 gunicorn==19.7.0
 pymongo==3.4.0
+requests
