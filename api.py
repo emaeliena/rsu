@@ -28,8 +28,8 @@ class MongoJsonEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def jsonify(*args, **kwargs):
-    return Response(json.dumps(dict(*args, **kwargs), cls=MongoJsonEncoder), mimetype='application/json')
+def jsonify(args):
+    return Response(json.dumps(args, cls=MongoJsonEncoder), mimetype='application/json')
 
 
 @app.route("/")
@@ -40,10 +40,14 @@ def index():
 @app.route("/v1/rates/<string:currency>")
 def show_exchange_rate(currency):
     date = request.args.get('date', datetime.datetime.now().strftime('%Y-%m-%d'))
-    rate = mongo.rates.find_one({'currency': currency, 'date': date})
+    query_filter = {
+        'currency': currency,
+        'date': {'$lte': datetime.datetime(*[int(i) for i in date.split('-')])}
+    }
+    rate = mongo.rates.find(query_filter, sort=[('date', -1)], limit=5)
     if rate is None:
         abort(404, 'Rate exchange not found')
-    return jsonify(rate)
+    return jsonify(list(rate))
 
 if __name__ == "__main__":
     app.run()
