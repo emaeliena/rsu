@@ -1,7 +1,7 @@
 $(document).ready(function() {
 
     var queryRates = function(date) {
-        var url = 'http://127.0.0.1:5000/v1/rates/USD';
+        var url = 'https://rsuapi.herokuapp.com/v1/rates/USD';
         if (date != '') {
             url += '?date=' + date;
         }
