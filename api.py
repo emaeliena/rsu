@@ -1,4 +1,4 @@
-import datetime.datetime as dt
+import datetime
 import os
 
 from flask import Flask, jsonify
@@ -13,7 +13,7 @@ mongo_conn = MongoClient(MONGODB_URI)
 mongo = mongo_conn.get_default_database()
 
 
-mongo.connections.insert({'dt': dt.now()})
+mongo.connections.insert({'dt': datetime.datetime.now()})
 
 
 @app.route("/")
