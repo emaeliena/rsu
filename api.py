@@ -58,8 +58,7 @@ def show_exchange_rate(currency):
 @app.route("/v1/delegate/<int:x>/<int:y>")
 def delegate(x, y):
     result = tasks.add(x, y)
-    assert isinstance(result, AsyncResult)
-    return jsonify({'status': 'ok', 'task_id': result.task_id})
+    return jsonify({'status': 'ok', 'task_id': getattr(result, 'task_id', 'no task_id attribute found')})
 
 if __name__ == "__main__":
     app.run()
