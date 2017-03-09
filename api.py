@@ -3,10 +3,13 @@ import json
 import os
 
 from bson.objectid import ObjectId
+from celery.result import AsyncResult
 from flask import Flask, request
 from pymongo import MongoClient
 from werkzeug.exceptions import abort
 from werkzeug.wrappers import Response
+
+import tasks
 
 MONGODB_URI = os.getenv('MONGODB_URI')
 
@@ -50,6 +53,13 @@ def show_exchange_rate(currency):
     response = jsonify(list(rate))
     response.headers['Access-Control-Allow-Origin'] = "*"
     return response
+
+
+@app.route("/v1/delegate/<int:x>/<int:y>")
+def delegate(x, y):
+    result = tasks.add(x, y)
+    assert isinstance(result, AsyncResult)
+    return jsonify({'status': 'ok', 'task_id': result.task_id})
 
 if __name__ == "__main__":
     app.run()
