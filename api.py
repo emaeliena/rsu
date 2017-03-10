@@ -1,24 +1,15 @@
 import datetime
 import json
-import os
 
 from bson.objectid import ObjectId
-from celery.result import AsyncResult
-from flask import Flask, request
-from pymongo import MongoClient
-from werkzeug.exceptions import abort
+from flask import Flask
 from werkzeug.wrappers import Response
 
 import tasks
-
-MONGODB_URI = os.getenv('MONGODB_URI')
-
+from db import mongo
+from utils import daterange, datetime_obj_from_str, date_obj_from_str
 
 app = application = Flask(__name__)
-mongo_conn = MongoClient(MONGODB_URI)
-mongo = mongo_conn.get_default_database()
-
-
 mongo.connections.insert({'dt': datetime.datetime.now()})
 
 
@@ -40,24 +31,28 @@ def index():
     return jsonify({"versions": {"v1": "/v1"}})
 
 
-@app.route("/v1/rates/<string:currency>")
-def show_exchange_rate(currency):
-    date = request.args.get('date', datetime.datetime.now().strftime('%Y-%m-%d'))
+@app.route("/v1/rates/<string:currency>/<string:date_start>/<string:date_end>")
+def show_exchange_rate(currency, date_start, date_end):
     query_filter = {
         'currency': currency,
-        'date': {'$lte': datetime.datetime(*[int(i) for i in date.split('-')])}
+        'date': {
+            '$gte': datetime_obj_from_str(date_start),
+            '$lte': datetime_obj_from_str(date_end)
+        }
     }
-    rate = mongo.rates.find(query_filter, sort=[('date', -1)], limit=5)
-    if rate is None:
-        abort(404, 'Rate exchange not found')
-    response = jsonify(list(rate))
+    rates = list(mongo.rates.find(query_filter, sort=[('date', -1)]))
+    if len(rates) != len(list(daterange(date_start, date_end))):
+        tasks.store_exchange_rates.delay(date_start, date_end)
+        response = jsonify({'status': 'preparing data...'})
+    else:
+        response = jsonify(rates)
     response.headers['Access-Control-Allow-Origin'] = "*"
     return response
 
 
-@app.route("/v1/delegate/<int:x>/<int:y>")
-def delegate(x, y):
-    result = tasks.add.delay(x, y)
+@app.route("/v1/delegate/<string:date>")
+def delegate(date):
+    result = tasks.store_rate.delay(date)
     return jsonify({'status': 'ok', 'task_id': getattr(result, 'task_id', 'no task_id attribute found')})
 
 
