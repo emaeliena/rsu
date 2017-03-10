@@ -2,6 +2,7 @@ beaker
 celery
 Flask==0.12
 gunicorn==19.7.0
+nose
 pymongo==3.4.0
 redis
 requests
