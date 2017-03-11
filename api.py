@@ -51,7 +51,7 @@ def show_exchange_rate(currency):
     if rate is None:
         abort(404, 'Rate exchange not found')
     response = jsonify(list(rate))
-    response.headers['Access-Control-Allow-Origin'] = "*"
+    response.headers['Access-Control-Allow-Origin'] = "https://emaeliena.github.io"
     return response
 
 
